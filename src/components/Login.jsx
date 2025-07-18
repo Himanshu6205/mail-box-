@@ -1,39 +1,35 @@
 import React, { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase/firebase";
 import { useNavigate } from "react-router-dom";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase/firebase";
 
-const Signup = () => {
+const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(true);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(true);
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
-  const formIsValid = email && password && confirmPassword;
+  const formIsValid = email && password;
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const token = await userCredential.user.getIdToken();
+      localStorage.setItem("authToken", token);
       setError("");
-      alert("Account created successfully!");
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
-      navigate("/");
+      navigate("/mailbox");
     } catch (err) {
-      if (err.code === "auth/email-already-in-use") {
-        setError("Email already exists. Please log in.");
+      if (err.code === "auth/user-not-found") {
+        setError("Email does not exist. Please create an account.");
+      } else if (err.code === "auth/wrong-password") {
+        setError("Incorrect password. Try again.");
       } else {
         setError("Something went wrong. Try again later.");
       }
@@ -43,11 +39,11 @@ const Signup = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center justify-center px-4">
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleLogin}
         className="w-full max-w-md bg-gray-800 p-8 rounded-xl shadow-xl"
       >
         <h2 className="text-2xl font-semibold text-white mb-6 text-center">
-          Create an Account
+          Login to Your Account
         </h2>
 
         <div className="mb-4">
@@ -67,7 +63,7 @@ const Signup = () => {
 
         <div className="mb-4 relative">
           <label htmlFor="password" className="block text-gray-300 mb-1">
-            Create Password
+            Password
           </label>
           <input
             type={showPassword ? "password" : "text"}
@@ -76,51 +72,30 @@ const Signup = () => {
             placeholder="Enter your password"
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full px-4 py-2 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 pr-10"
+            className="w-full px-4 py-2 pr-10 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
           />
           <span
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-[70%] -translate-y-1/2 text-gray-300 hover:text-white cursor-pointer"
+            className="absolute right-3 top-[50%] -translate-y-1/2 text-gray-300 hover:text-white cursor-pointer"
           >
             {showPassword ? <FaEye /> : <FaEyeSlash />}
           </span>
         </div>
 
-        <div className="mb-4 relative">
-          <label htmlFor="confirmPassword" className="block text-gray-300 mb-1">
-            Confirm Password
-          </label>
-          <input
-            type={showConfirmPassword ? "password" : "text"}
-            id="confirmPassword"
-            value={confirmPassword}
-            placeholder="Confirm your password"
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            className="w-full px-4 py-2 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 pr-10"
-          />
-          <span
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-3 top-[70%] -translate-y-1/2 text-gray-300 hover:text-white cursor-pointer"
-          >
-            {showConfirmPassword ? <FaEye /> : <FaEyeSlash />}
-          </span>
-        </div>
-
         {error && (
-          <p className="text-red-500 text-sm mb-4 text-center font-medium">
+          <p className="text-red-500 text-sm text-center font-medium mb-2">
             {error}
           </p>
         )}
 
-        {error === "Email already exists. Please log in." && (
-          <p className="text-center">
+        {error === "Email does not exist. Please create an account." && (
+          <p className="text-center mb-2">
             <button
               type="button"
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/signup")}
               className="text-cyan-400 hover:underline text-sm"
             >
-              Go to Login
+              Create an Account
             </button>
           </p>
         )}
@@ -134,19 +109,19 @@ const Signup = () => {
               : "bg-gray-600 cursor-not-allowed"
           }`}
         >
-          Create Account
+          Login
         </button>
 
-        {/* Already have account? */}
+        {/* Don't have an account */}
         {!error && (
           <p className="text-center mt-4 text-sm text-gray-300">
-            Already have an account?{" "}
+            Don’t have an account?{" "}
             <button
               type="button"
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/signup")}
               className="text-cyan-400 hover:underline"
             >
-              Login to your account
+              Create one
             </button>
           </p>
         )}
@@ -155,4 +130,4 @@ const Signup = () => {
   );
 };
 
-export default Signup;
+export default Login;
