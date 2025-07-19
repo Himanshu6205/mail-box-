@@ -9,6 +9,7 @@ import Login from "./components/Login";
 import Signup from "./components/Signup";
 import Mailbox from "./components/Mailbox";
 import ProtectedLayout from "./components/ProtectedLayout";
+import ComposeMail from "./components/ComposeMail";
 
 const App = () => {
   const isAuthenticated = !!localStorage.getItem("authToken");
@@ -24,6 +25,7 @@ const App = () => {
         {isAuthenticated && (
           <Route path="/" element={<ProtectedLayout />}>
             <Route path="mailbox" element={<Mailbox />} />
+            <Route path="composemail" element={<ComposeMail />} />
             {/* You can add more protected routes here */}
           </Route>
         )}
